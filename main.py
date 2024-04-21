@@ -1,41 +1,35 @@
-import pygame
+import pygame, sys
+from settings import *
+from game_manager import GameManager
 
-pygame.init()
+class Game:
+    def __init__(self):
+        pygame.init()
+        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        self.title = pygame.display.set_caption(TITLE)
+        self.clock = pygame.time.Clock()
 
-width = 1500
-height = 900
-screen = pygame.display.set_mode((width, height))
+        self.game_manager = GameManager()
+        self.game_started = False
+        self.title_bg = pygame.image.load('./assets/gfx/title_bg.jpeg')
 
-white = (255, 255, 255)
-black = (0, 0, 0)
-red = (255, 0, 0)
+    def run(self):
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                    self.game_started = True
+            
+            if self.game_started:
+                self.game_manager.run()
 
-font = pygame.font.SysFont("Arial", 32)
+            pygame.display.update()
 
-number = 0
+            self.screen.blit(self.title_bg, (0, 0))
+            self.clock.tick(FPS)
 
-def draw_button(x, y, width, height, text):
-    pygame.draw.rect(screen, black, (x, y, width, height))
-    rendered_text = font.render(text, True, white)
-    screen.blit(rendered_text, (x + (width - rendered_text.get_width()) // 2, y + (height - rendered_text.get_height()) // 2))
-
-while True:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
-
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            mouse_pos = pygame.mouse.get_pos()
-            if 100 <= mouse_pos[0] <= 300 and 100 <= mouse_pos[1] <= 200:
-                number += 1
-
-    screen.fill(white)
-
-    draw_button(100, 100, 200, 100, "Click")
-
-    number_text = str(number)
-    rendered_text = font.render(number_text, True, black)
-    screen.blit(rendered_text, (400, 100))
-
-    pygame.display.update()
+if __name__ == '__main__':
+    game = Game()
+    game.run() 
