@@ -5,4 +5,10 @@ FPS = 60
 center_x = WIDTH / 2
 center_y = HEIGHT / 2
 
+ARROW_SIZE = (50, 50)
+DOWN_ARROW_POS = (150,900)
+UP_ARROW_POS = (150,845)
+LEFT_ARROW_POS = (95,900)
+RIGHT_ARROW_POS = (205,900)
+
 TITLE = 'Zloty Rog: Skarb Swarozyca'

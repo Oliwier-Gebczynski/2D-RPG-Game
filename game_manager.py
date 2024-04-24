@@ -3,18 +3,15 @@
 
 import pygame
 from settings import *
+from interface import Interface
 
 class GameManager:
     def __init__(self):
         self.display_surface = pygame.display.get_surface()
 
-        self.image = pygame.image.load('./assets/gfx/test.jpeg')
-        self.image_rect = self.image.get_rect()
-
-        self.visible_sprites = pygame.sprite.Group()
-        self.obstacles_sprites = pygame.sprite.Group()
+        self.interface = Interface()
     
     def run(self):
-        self.display_surface.blit(self.image, (0, 0))
+        self.interface.run()
         pass
 
