@@ -27,7 +27,7 @@ class Game:
 
             pygame.display.update()
 
-            #self.screen.blit(self.title_bg, (0, 0))
+            self.screen.blit(self.title_bg, (0, 0))
             self.clock.tick(FPS)
 
 if __name__ == '__main__':

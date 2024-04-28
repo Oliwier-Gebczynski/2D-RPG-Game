@@ -4,14 +4,17 @@
 import pygame
 from settings import *
 from interface import Interface
+from game_menu import Menu
 
 class GameManager:
     def __init__(self):
         self.display_surface = pygame.display.get_surface()
 
         self.interface = Interface()
+        self.game_menu = Menu()
     
     def run(self):
-        self.interface.run()
+        #self.interface.run()
+        self.game_menu.run()
         pass
 

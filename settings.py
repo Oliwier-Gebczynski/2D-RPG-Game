@@ -1,3 +1,5 @@
+import pygame
+
 WIDTH = 1024
 HEIGHT = 1024
 FPS = 60
