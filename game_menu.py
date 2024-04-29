@@ -56,10 +56,26 @@ class Menu:
         start_button = Button((412, 400), "New Game", (255, 255, 255), font, 200, 50, 2, (255, 255, 255))
         start_button.draw(self.display_surface)
 
-        start_button = Button((412, 500), "Load Game", (255, 255, 255), font, 200, 50, 2, (255, 255, 255))
-        start_button.draw(self.display_surface)
+        load_button = Button((412, 500), "Load Game", (255, 255, 255), font, 200, 50, 2, (255, 255, 255))
+        load_button.draw(self.display_surface)
 
-        start_button = Button((412, 600), "Exit", (255, 255, 255), font, 200, 50, 2, (255, 255, 255))
-        start_button.draw(self.display_surface)
+        exit_button = Button((412, 600), "Exit", (255, 255, 255), font, 200, 50, 2, (255, 255, 255))
+        exit_button.draw(self.display_surface)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = pygame.mouse.get_pos()
+                if start_button.check_click(mouse_pos):
+                    print("New Game")
+                elif load_button.check_click(mouse_pos):
+                    print("Load Game")
+                elif exit_button.check_click(mouse_pos):
+                    pygame.quit()
+                    sys.exit()
+
+        pygame.display.flip()
 
         pass
