@@ -13,4 +13,4 @@ UP_ARROW_POS = (150,820)
 LEFT_ARROW_POS = (70,900)
 RIGHT_ARROW_POS = (230,900)
 
-TITLE = 'Zloty Rog: Skarb Swarozyca'
+TITLE = 'Złoty Róg: Skarb Swarożyca'

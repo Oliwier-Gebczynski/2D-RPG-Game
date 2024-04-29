@@ -2,7 +2,7 @@ import pygame, sys
 from settings import *
 
 class Button:
-    def __init__(self, pos, text, text_color, font_size, width=100, height=50, border_width=2, border_color=(0, 0, 0)):
+    def __init__(self, pos, text, text_color, font_size, width=150, height=50, border_width=2, border_color=(0, 0, 0)):
         self.pos = pos
         self.text = text
         self.text_color = text_color
@@ -31,12 +31,35 @@ class Menu:
         self.display_surface = pygame.display.get_surface()
         self.image = pygame.image.load('./assets/gfx/test.jpeg')
         FONT = pygame.font.Font(None, 32) 
+        self.menu_background = pygame.Surface((412,600)) 
+        self.menu_title = TITLE
+
+        self.font = pygame.font.SysFont(None, 24)
+        
     
     def run(self):
+        font = pygame.font.Font(None, 32)
+        #menu background (photo)
         self.display_surface.blit(self.image, (0, 0))
 
-        font = pygame.font.Font(None, 32)
-        start_button = Button((412, 500), "Start Game", (255, 255, 255), font, 150, 50, 2, (255, 255, 255))
-        start_button.draw(self.display_surface)
+        #menu background (white)
         
+        self.menu_background.set_alpha(192)
+        self.menu_background.fill((0,0,0))
+        self.display_surface.blit(self.menu_background, (300,200))
+
+        #title
+        img = font.render(TITLE, True, (255,255,255))
+        self.display_surface.blit(img, (355, 300))
+
+        #display button
+        start_button = Button((412, 400), "New Game", (255, 255, 255), font, 200, 50, 2, (255, 255, 255))
+        start_button.draw(self.display_surface)
+
+        start_button = Button((412, 500), "Load Game", (255, 255, 255), font, 200, 50, 2, (255, 255, 255))
+        start_button.draw(self.display_surface)
+
+        start_button = Button((412, 600), "Exit", (255, 255, 255), font, 200, 50, 2, (255, 255, 255))
+        start_button.draw(self.display_surface)
+
         pass
