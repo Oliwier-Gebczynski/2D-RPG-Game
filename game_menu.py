@@ -26,6 +26,16 @@ class Button:
         button_rect = pygame.Rect(self.pos[0], self.pos[1], self.width + self.border_width * 2, self.height + self.border_width * 2)
         return button_rect.collidepoint(mouse_pos)
 
+class NewSaveView:
+    def __init__(self):
+        self.display_surface = pygame.display.get_surface()
+    
+    def draw(self, surface):
+        font = pygame.font.Font(None, 32)
+        start_button = Button((100, 100), "Confirm", (255, 255, 255), font, 200, 50, 2, (255, 255, 255))
+        start_button.draw(self.display_surface)
+
+
 class Menu:
     def __init__(self):
         self.display_surface = pygame.display.get_surface()
@@ -35,6 +45,8 @@ class Menu:
         self.menu_title = TITLE
 
         self.font = pygame.font.SysFont(None, 24)
+
+        self.new_game = False
         
     
     def run(self):
@@ -70,12 +82,17 @@ class Menu:
                 mouse_pos = pygame.mouse.get_pos()
                 if start_button.check_click(mouse_pos):
                     print("New Game")
+                    self.new_game = True
                 elif load_button.check_click(mouse_pos):
                     print("Load Game")
                 elif exit_button.check_click(mouse_pos):
                     pygame.quit()
                     sys.exit()
 
+        if self.new_game == True:
+            new_save_view = NewSaveView()
+            new_save_view.draw(self.display_surface)
+            
         pygame.display.flip()
 
         pass
