@@ -32,9 +32,13 @@ class NewSaveView:
     
     def draw(self, surface):
         font = pygame.font.Font(None, 32)
-        start_button = Button((100, 100), "Confirm", (255, 255, 255), font, 200, 50, 2, (255, 255, 255))
-        start_button.draw(self.display_surface)
+        start_button = Button((412, 700), "Confirm", (255, 255, 255), font, 200, 50, 2, (255, 255, 255))
+        male_button = Button((412, 500), "Male", (255, 255, 255), font, 200, 50, 2, (255, 255, 255))
+        female_button = Button((412, 400), "Female", (255, 255, 255), font, 200, 50, 2, (255, 255, 255))
 
+        start_button.draw(self.display_surface)
+        male_button.draw(self.display_surface)
+        female_button.draw(self.display_surface)
 
 class Menu:
     def __init__(self):
@@ -47,7 +51,7 @@ class Menu:
         self.font = pygame.font.SysFont(None, 24)
 
         self.new_game = False
-        
+        self.second_view = False
     
     def run(self):
         font = pygame.font.Font(None, 32)
@@ -74,25 +78,32 @@ class Menu:
         exit_button = Button((412, 600), "Exit", (255, 255, 255), font, 200, 50, 2, (255, 255, 255))
         exit_button.draw(self.display_surface)
 
+        if self.new_game == True:
+            self.display_surface.blit(self.image, (0, 0))
+            self.display_surface.blit(self.menu_background, (300,200))
+            new_save_view = NewSaveView()
+            new_save_view.draw(self.display_surface)
+            pygame.display.flip()
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            elif event.type == pygame.MOUSEBUTTONDOWN:
+            elif event.type == pygame.MOUSEBUTTONDOWN and self.second_view == False:
                 mouse_pos = pygame.mouse.get_pos()
                 if start_button.check_click(mouse_pos):
                     print("New Game")
                     self.new_game = True
+                    self.second_view = True
                 elif load_button.check_click(mouse_pos):
                     print("Load Game")
+                    self.second_view = True
                 elif exit_button.check_click(mouse_pos):
                     pygame.quit()
                     sys.exit()
-
-        if self.new_game == True:
-            new_save_view = NewSaveView()
-            new_save_view.draw(self.display_surface)
             
+
+
         pygame.display.flip()
 
         pass
