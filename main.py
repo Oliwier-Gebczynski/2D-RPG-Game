@@ -26,7 +26,7 @@ class Game:
                     pygame.quit()
                     sys.exit()
                 
-            if self.intro_counter == 240:
+            if self.intro_counter == 10:
                 self.game_started = True
 
             if self.game_started:

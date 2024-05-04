@@ -11,6 +11,8 @@ class Button:
         self.height = height
         self.border_width = border_width
         self.border_color = border_color
+        self.active_color = (0, 255, 0)
+        self.is_active = False
         FONT = pygame.font.Font(None, 32) 
 
         self.text_surface = FONT.render(text, True, text_color)
@@ -23,22 +25,30 @@ class Button:
         surface.blit(self.text_surface, self.text_rect)
 
     def check_click(self, mouse_pos):
-        button_rect = pygame.Rect(self.pos[0], self.pos[1], self.width + self.border_width * 2, self.height + self.border_width * 2)
-        return button_rect.collidepoint(mouse_pos)
+        return (self.pos[0] <= mouse_pos[0] <= self.pos[0] + self.width and
+            self.pos[1] <= mouse_pos[1] <= self.pos[1] + self.height)
+
+    def change_active_state(self):
+        if self.is_active == False:
+            self.border_color = self.active_color
+            self.is_active = True
+        else:
+            self.border_color = (255, 255, 255)
+            self.is_active = False
+
 
 class NewSaveView:
     def __init__(self):
         self.display_surface = pygame.display.get_surface()
+        font = pygame.font.Font(None, 32)
+        self.confirm_button = Button((412, 700), "Confirm", (255, 255, 255), font, 200, 50, 2, (255, 255, 255))
+        self.male_button = Button((412, 500), "Male", (255, 255, 255), font, 200, 50, 2, (255, 255, 255))
+        self.female_button = Button((412, 400), "Female", (255, 255, 255), font, 200, 50, 2, (255, 255, 255))
     
     def draw(self, surface):
-        font = pygame.font.Font(None, 32)
-        start_button = Button((412, 700), "Confirm", (255, 255, 255), font, 200, 50, 2, (255, 255, 255))
-        male_button = Button((412, 500), "Male", (255, 255, 255), font, 200, 50, 2, (255, 255, 255))
-        female_button = Button((412, 400), "Female", (255, 255, 255), font, 200, 50, 2, (255, 255, 255))
-
-        start_button.draw(self.display_surface)
-        male_button.draw(self.display_surface)
-        female_button.draw(self.display_surface)
+        self.confirm_button.draw(self.display_surface)
+        self.male_button.draw(self.display_surface)
+        self.female_button.draw(self.display_surface)
 
 class Menu:
     def __init__(self):
@@ -52,6 +62,8 @@ class Menu:
 
         self.new_game = False
         self.second_view = False
+
+        self.new_save_view = NewSaveView()
     
     def run(self):
         font = pygame.font.Font(None, 32)
@@ -59,7 +71,6 @@ class Menu:
         self.display_surface.blit(self.image, (0, 0))
 
         #menu background (white)
-        
         self.menu_background.set_alpha(192)
         self.menu_background.fill((0,0,0))
         self.display_surface.blit(self.menu_background, (300,200))
@@ -81,9 +92,7 @@ class Menu:
         if self.new_game == True:
             self.display_surface.blit(self.image, (0, 0))
             self.display_surface.blit(self.menu_background, (300,200))
-            new_save_view = NewSaveView()
-            new_save_view.draw(self.display_surface)
-            pygame.display.flip()
+            self.new_save_view.draw(self.display_surface)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -101,8 +110,16 @@ class Menu:
                 elif exit_button.check_click(mouse_pos):
                     pygame.quit()
                     sys.exit()
-            
-
+    
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if self.new_save_view.female_button.check_click(event.pos):
+                    print("Female")
+                    print(self.new_save_view.female_button.is_active)
+                    self.new_save_view.female_button.change_active_state() 
+                elif self.new_save_view.male_button.check_click(event.pos):
+                    print("Male")
+                    print(self.new_save_view.male_button.is_active)
+                    self.new_save_view.male_button.change_active_state()
 
         pygame.display.flip()
 
