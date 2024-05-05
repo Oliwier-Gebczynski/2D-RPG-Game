@@ -11,22 +11,28 @@ class Button:
         self.height = height
         self.border_width = border_width
         self.border_color = border_color
-        self.active_color = (0, 255, 0)
-        self.is_active = False
-        FONT = pygame.font.Font(None, 32) 
+        self.active_color = (0, 255, 0)  
+        self.is_active = False  
+        self.clicked = False  
+
+        FONT = pygame.font.Font(None, font_size) 
 
         self.text_surface = FONT.render(text, True, text_color)
 
-        self.text_rect = self.text_surface.get_rect(center=(self.pos[0] + self.width // 2, self.pos[1] + self.height // 2))
+        self.rect = pygame.Rect(self.pos[0], self.pos[1], self.width, self.height) 
 
     def draw(self, surface):
-        pygame.draw.rect(surface, self.border_color,
-                         (self.pos[0], self.pos[1], self.width, self.height), self.border_width)
-        surface.blit(self.text_surface, self.text_rect)
+        pygame.draw.rect(surface, self.border_color, self.rect, self.border_width)
+        surface.blit(self.text_surface, self.text_surface.get_rect(center=self.rect.center))
 
     def check_click(self, mouse_pos):
-        return (self.pos[0] <= mouse_pos[0] <= self.pos[0] + self.width and
-            self.pos[1] <= mouse_pos[1] <= self.pos[1] + self.height)
+        if self.rect.collidepoint(mouse_pos): 
+            if pygame.mouse.get_pressed()[0] == 1 and not self.clicked:  
+                self.clicked = True
+                return True 
+            else:
+                self.clicked = False  
+        return False 
 
     def change_active_state(self):
         if self.is_active == False:
@@ -36,14 +42,12 @@ class Button:
             self.border_color = (255, 255, 255)
             self.is_active = False
 
-
 class NewSaveView:
     def __init__(self):
         self.display_surface = pygame.display.get_surface()
-        font = pygame.font.Font(None, 32)
-        self.confirm_button = Button((412, 700), "Confirm", (255, 255, 255), font, 200, 50, 2, (255, 255, 255))
-        self.male_button = Button((412, 500), "Male", (255, 255, 255), font, 200, 50, 2, (255, 255, 255))
-        self.female_button = Button((412, 400), "Female", (255, 255, 255), font, 200, 50, 2, (255, 255, 255))
+        self.confirm_button = Button((412, 700), "Confirm", (255, 255, 255), 32, 200, 50, 2, (255, 255, 255))
+        self.male_button = Button((412, 500), "Male", (255, 255, 255), 32, 200, 50, 2, (255, 255, 255))
+        self.female_button = Button((412, 400), "Female", (255, 255, 255), 32, 200, 50, 2, (255, 255, 255))
     
     def draw(self, surface):
         self.confirm_button.draw(self.display_surface)
@@ -52,20 +56,32 @@ class NewSaveView:
 
 class Menu:
     def __init__(self):
+        self.menu_elements = []
+        self.font = pygame.font.SysFont(None, 24)
         self.display_surface = pygame.display.get_surface()
         self.image = pygame.image.load('./assets/gfx/test.jpeg')
         FONT = pygame.font.Font(None, 32) 
         self.menu_background = pygame.Surface((412,600)) 
         self.menu_title = TITLE
-
-        self.font = pygame.font.SysFont(None, 24)
+        self.img = self.font.render(TITLE, True, (255,255,255))
 
         self.new_game = False
         self.second_view = False
 
+        self.start_button = Button((412, 400), "New Game", (255, 255, 255), 32, 200, 50, 2, (255, 255, 255))
+        self.load_button = Button((412, 500), "Load Game", (255, 255, 255), 32, 200, 50, 2, (255, 255, 255))
+        self.exit_button = Button((412, 600), "Exit", (255, 255, 255), 32, 200, 50, 2, (255, 255, 255))
+
         self.new_save_view = NewSaveView()
-    
+
+        self.menu_elements.append(self.start_button)
+        self.menu_elements.append(self.load_button)
+        self.menu_elements.append(self.exit_button)
+        
     def run(self):
+        mouse_pos = pygame.mouse.get_pos()
+        print(mouse_pos)
+
         font = pygame.font.Font(None, 32)
         #menu background (photo)
         self.display_surface.blit(self.image, (0, 0))
@@ -76,38 +92,31 @@ class Menu:
         self.display_surface.blit(self.menu_background, (300,200))
 
         #title
-        img = font.render(TITLE, True, (255,255,255))
-        self.display_surface.blit(img, (355, 300))
+        self.display_surface.blit(self.img, (355, 300))
 
-        #display button
-        start_button = Button((412, 400), "New Game", (255, 255, 255), font, 200, 50, 2, (255, 255, 255))
-        start_button.draw(self.display_surface)
-
-        load_button = Button((412, 500), "Load Game", (255, 255, 255), font, 200, 50, 2, (255, 255, 255))
-        load_button.draw(self.display_surface)
-
-        exit_button = Button((412, 600), "Exit", (255, 255, 255), font, 200, 50, 2, (255, 255, 255))
-        exit_button.draw(self.display_surface)
+        #display button zrobic fora do draw 
+        for element in self.menu_elements:
+            element.draw(self.display_surface)
 
         if self.new_game == True:
-            self.display_surface.blit(self.image, (0, 0))
-            self.display_surface.blit(self.menu_background, (300,200))
             self.new_save_view.draw(self.display_surface)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            elif event.type == pygame.MOUSEBUTTONDOWN and self.second_view == False:
-                mouse_pos = pygame.mouse.get_pos()
-                if start_button.check_click(mouse_pos):
+            elif event.type == pygame.MOUSEBUTTONDOWN and self.new_game == False:
+                
+                if self.start_button.check_click(mouse_pos):
                     print("New Game")
                     self.new_game = True
                     self.second_view = True
-                elif load_button.check_click(mouse_pos):
+                    self.menu_elements = []
+                elif self.load_button.check_click(mouse_pos):
                     print("Load Game")
                     self.second_view = True
-                elif exit_button.check_click(mouse_pos):
+                    self.menu_elements = []
+                elif self.exit_button.check_click(mouse_pos):
                     pygame.quit()
                     sys.exit()
     
