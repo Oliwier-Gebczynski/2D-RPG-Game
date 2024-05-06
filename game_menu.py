@@ -45,6 +45,7 @@ class Button:
 class NewSaveView:
     def __init__(self):
         self.display_surface = pygame.display.get_surface()
+        self.clock = pygame.time.Clock()
         self.confirm_button = Button((412, 700), "Confirm", (255, 255, 255), 32, 200, 50, 2, (255, 255, 255))
         self.male_button = Button((412, 500), "Male", (255, 255, 255), 32, 200, 50, 2, (255, 255, 255))
         self.female_button = Button((412, 400), "Female", (255, 255, 255), 32, 200, 50, 2, (255, 255, 255))
@@ -53,10 +54,33 @@ class NewSaveView:
         self.confirm_button.draw(self.display_surface)
         self.male_button.draw(self.display_surface)
         self.female_button.draw(self.display_surface)
+    
+    def run(self):
+        running = True
+
+        while running:
+            self.draw(self.display_surface)
+            mouse_pos = pygame.mouse.get_pos()
+
+            for event in pygame.event.get(): 
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if self.female_button.check_click(mouse_pos):
+                        print("Female")
+                        print(self.female_button.is_active)
+                        self.female_button.change_active_state() 
+                    elif self.male_button.check_click(mouse_pos):
+                        print("Male")
+                        print(self.male_button.is_active)
+                        self.male_button.change_active_state()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        running = False
+
+        pygame.display.update()
+        self.clock.tick(FPS)
 
 class Menu:
     def __init__(self):
-        self.menu_elements = []
         self.font = pygame.font.SysFont(None, 24)
         self.display_surface = pygame.display.get_surface()
         self.image = pygame.image.load('./assets/gfx/test.jpeg')
@@ -64,6 +88,7 @@ class Menu:
         self.menu_background = pygame.Surface((412,600)) 
         self.menu_title = TITLE
         self.img = self.font.render(TITLE, True, (255,255,255))
+        self.clock = pygame.time.Clock()
 
         self.new_game = False
         self.second_view = False
@@ -73,63 +98,43 @@ class Menu:
         self.exit_button = Button((412, 600), "Exit", (255, 255, 255), 32, 200, 50, 2, (255, 255, 255))
 
         self.new_save_view = NewSaveView()
-
-        self.menu_elements.append(self.start_button)
-        self.menu_elements.append(self.load_button)
-        self.menu_elements.append(self.exit_button)
         
     def run(self):
-        mouse_pos = pygame.mouse.get_pos()
-        print(mouse_pos)
+        running = True
+        while running:
+            mouse_pos = pygame.mouse.get_pos()
 
-        font = pygame.font.Font(None, 32)
-        #menu background (photo)
-        self.display_surface.blit(self.image, (0, 0))
+            #menu background (photo)
+            self.display_surface.blit(self.image, (0, 0))
 
-        #menu background (white)
-        self.menu_background.set_alpha(192)
-        self.menu_background.fill((0,0,0))
-        self.display_surface.blit(self.menu_background, (300,200))
+            #menu background (white)
+            self.menu_background.set_alpha(192)
+            self.menu_background.fill((0,0,0))
+            self.display_surface.blit(self.menu_background, (300,200))
 
-        #title
-        self.display_surface.blit(self.img, (355, 300))
+            #title
+            self.display_surface.blit(self.img, (355, 300))
 
-        #display button zrobic fora do draw 
-        for element in self.menu_elements:
-            element.draw(self.display_surface)
+            #display button zrobic fora do draw 
+            for element in self.menu_elements:
+                element.draw(self.display_surface)
 
-        if self.new_game == True:
-            self.new_save_view.draw(self.display_surface)
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            elif event.type == pygame.MOUSEBUTTONDOWN and self.new_game == False:
-                
-                if self.start_button.check_click(mouse_pos):
-                    print("New Game")
-                    self.new_game = True
-                    self.second_view = True
-                    self.menu_elements = []
-                elif self.load_button.check_click(mouse_pos):
-                    print("Load Game")
-                    self.second_view = True
-                    self.menu_elements = []
-                elif self.exit_button.check_click(mouse_pos):
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
-    
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if self.new_save_view.female_button.check_click(event.pos):
-                    print("Female")
-                    print(self.new_save_view.female_button.is_active)
-                    self.new_save_view.female_button.change_active_state() 
-                elif self.new_save_view.male_button.check_click(event.pos):
-                    print("Male")
-                    print(self.new_save_view.male_button.is_active)
-                    self.new_save_view.male_button.change_active_state()
-
-        pygame.display.flip()
+                elif event.type == pygame.MOUSEBUTTONDOWN and self.new_game == False:
+                    
+                    if self.start_button.check_click(mouse_pos):
+                        print("New Game")
+                        self.new_save_view.run()
+                    elif self.load_button.check_click(mouse_pos):
+                        print("Load Game")
+                    elif self.exit_button.check_click(mouse_pos):
+                        pygame.quit()
+                        sys.exit()
+        
+            pygame.display.update()
+            self.clock.tick(FPS)
 
         pass

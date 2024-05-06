@@ -15,6 +15,8 @@ class GameManager:
     
     def run(self):
         #self.interface.run()
-        self.game_menu.run()
+        while True:
+            self.game_menu.run()
+        
         pass
 
