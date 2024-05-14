@@ -1,5 +1,5 @@
 import os, time, pygame
-from states.title import Title
+from states.title import StartMenu
 
 class Game():
         def __init__(self):
@@ -45,6 +45,7 @@ class Game():
                         self.actions['action2'] = True    
                     if event.key == pygame.K_RETURN:
                         self.actions['start'] = True  
+                        
 
                 if event.type == pygame.KEYUP:
                     if event.key == pygame.K_a:
@@ -67,10 +68,9 @@ class Game():
 
         def render(self):
             self.state_stack[-1].render(self.game_canvas)
-            # Render current state to the screen
+            
             self.screen.blit(pygame.transform.scale(self.game_canvas,(self.SCREEN_WIDTH, self.SCREEN_HEIGHT)), (0,0))
             pygame.display.flip()
-
 
         def get_dt(self):
             now = time.time()
@@ -85,20 +85,22 @@ class Game():
             surface.blit(text_surface, text_rect)
 
         def load_assets(self):
-            # Create pointers to directories 
             self.assets_dir = os.path.join("assets")
             self.sprite_dir = os.path.join(self.assets_dir, "sprites")
             self.font_dir = os.path.join(self.assets_dir, "font")
             self.font= pygame.font.Font(os.path.join(self.font_dir, "PressStart2P-vaV7.ttf"), 20)
 
         def load_states(self):
-            self.title_screen = Title(self)
+            self.title_screen = StartMenu(self)
             self.state_stack.append(self.title_screen)
 
         def reset_keys(self):
             for action in self.actions:
                 self.actions[action] = False
 
+        def quit(self):
+            pygame.quit()  # Quit pygame
+            quit()  # Exit the program
 
 if __name__ == "__main__":
     g = Game()
