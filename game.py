@@ -14,6 +14,7 @@ class Game():
             self.state_stack = []
             self.load_assets()
             self.load_states()
+            self.input_text = [""]
 
         def game_loop(self):
             while self.playing:
@@ -27,26 +28,26 @@ class Game():
                 if event.type == pygame.QUIT:
                     self.playing = False
                     self.running = False
+                if event.type == pygame.TEXTINPUT:
+                    self.input_text += event.text
+                    print(self.input_text)
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         self.playing = False
                         self.running = False
-                    if event.key == pygame.K_a:
+                    if event.key == pygame.K_LEFT:
                         self.actions['left'] = True
-                    if event.key == pygame.K_d:
+                    if event.key == pygame.K_RIGHT:
                         self.actions['right'] = True
-                    if event.key == pygame.K_w:
+                    if event.key == pygame.K_UP:
                         self.actions['up'] = True
-                    if event.key == pygame.K_s:
-                        self.actions['down'] = True
-                    if event.key == pygame.K_p:
-                        self.actions['action1'] = True
-                    if event.key == pygame.K_o:
-                        self.actions['action2'] = True    
+                    if event.key == pygame.K_DOWN:
+                        self.actions['down'] = True    
                     if event.key == pygame.K_RETURN:
                         self.actions['start'] = True  
+                    if event.key == pygame.K_BACKSPACE:
+                        self.input_text = self.input_text[:-1]
                         
-
                 if event.type == pygame.KEYUP:
                     if event.key == pygame.K_a:
                         self.actions['left'] = False
@@ -67,7 +68,7 @@ class Game():
             self.state_stack[-1].update(self.dt,self.actions)
 
         def render(self):
-            self.state_stack[-1].render(self.game_canvas)
+            self.state_stack[-1].render(self.game_canvas, self.input_text)
             
             self.screen.blit(pygame.transform.scale(self.game_canvas,(self.SCREEN_WIDTH, self.SCREEN_HEIGHT)), (0,0))
             pygame.display.flip()
