@@ -1,4 +1,4 @@
-import os, time, pygame
+import os, time, pygame, json
 from states.title import StartMenu
 
 class Game():
@@ -99,9 +99,23 @@ class Game():
             for action in self.actions:
                 self.actions[action] = False
 
+        def new_save(self):
+            split_name = "".join(self.input_text)
+            saves_dir = os.path.join("saves")
+
+            if not os.path.exists(saves_dir):
+                try:
+                    os.makedirs(saves_dir)
+                except OSError as e:
+                    print(f"Error creating saves directory: {e}")
+                    return
+
+            save_path = os.path.join(saves_dir, split_name)
+
+
         def quit(self):
-            pygame.quit()  # Quit pygame
-            quit()  # Exit the program
+            pygame.quit()
+            quit() 
 
 if __name__ == "__main__":
     g = Game()

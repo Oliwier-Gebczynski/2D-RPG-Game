@@ -1,5 +1,6 @@
 import pygame, os
 from states.state import State
+from data_manager import DataManager
 
 class StartMenu(State):
     def __init__(self, game):
@@ -63,15 +64,18 @@ class NewGame(State):
         self.game = game
         State.__init__(self, game)
 
-        # Set the menu font
-        self.font = pygame.font.Font(None, 24)  # Adjust font size as needed
+        self.data_manager = DataManager()
 
-        # Set menu options and their positions
+        self.font = pygame.font.Font(None, 24) 
+
         self.menu_options = {"Confirm": (self.game.GAME_W * 0.4, self.game.GAME_H * 0.8),
-                             "Back": (self.game.GAME_W * 0.6, self.game.GAME_H * 0.8)}  # Adjust positions as needed
+                             "Back": (self.game.GAME_W * 0.6, self.game.GAME_H * 0.8)}  
 
-        # Set initial cursor position (assuming "Start" is selected initially)
         self.selected_index = 0
+
+        self.new_game_template = {
+            "name": "",
+        }
 
     def update(self, delta_time, actions):
         if actions["right"]:
@@ -79,7 +83,7 @@ class NewGame(State):
         elif actions["left"]:
             self.selected_index = (self.selected_index - 1) % len(self.menu_options)
         if actions["start"]:
-            self.transition_state()
+            self.transition_state(self.game.input_text)
 
         self.game.reset_keys()
 
@@ -109,18 +113,20 @@ class NewGame(State):
             line_y = selected_pos[1] + 10 
             pygame.draw.line(display, (255, 255, 255), (line_start_x, line_y), (line_end_x, line_y), 2)  
 
-    def transition_state(self):
+    def transition_state(self, text):
         selected_option = list(self.menu_options.keys())[self.selected_index]
         if selected_option == "Confirm":
+            self.new_game_template["name"] = "".join(text)
+            self.data_manager.create_save(self.new_game_template, "".join(text), True)
             pass
         elif selected_option == "Back":
             while len(self.game.state_stack) > 1:
                 self.game.state_stack.pop()
 
     def draw_text(self, text, font, text_col, x, y, display):
-        text_to_display = "".join(text)  # Concatenate all letters into a single string
-        img = font.render(text_to_display, True, text_col)  # Render the entire string
-        width = img.get_width()  # Get the width of the rendered text
+        text_to_display = "".join(text)  
+        img = font.render(text_to_display, True, text_col) 
+        width = img.get_width()  
         display.blit(img, (x - (width / 2), y))
 
 
