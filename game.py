@@ -15,6 +15,7 @@ class Game():
             self.load_assets()
             self.load_states()
             self.input_text = [""]
+            self.current_player = ""
 
         def game_loop(self):
             while self.playing:
@@ -28,9 +29,7 @@ class Game():
                 if event.type == pygame.QUIT:
                     self.playing = False
                     self.running = False
-                if event.type == pygame.TEXTINPUT:
-                    self.input_text += event.text
-                    print(self.input_text)
+
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         self.playing = False
@@ -49,20 +48,24 @@ class Game():
                         self.input_text = self.input_text[:-1]
                         
                 if event.type == pygame.KEYUP:
-                    if event.key == pygame.K_a:
+                    if event.key == pygame.K_LEFT:
                         self.actions['left'] = False
-                    if event.key == pygame.K_d:
+                    if event.key == pygame.K_RIGHT:
                         self.actions['right'] = False
-                    if event.key == pygame.K_w:
+                    if event.key == pygame.K_UP:
                         self.actions['up'] = False
-                    if event.key == pygame.K_s:
+                    if event.key == pygame.K_DOWN:
                         self.actions['down'] = False
                     if event.key == pygame.K_p:
                         self.actions['action1'] = False
                     if event.key == pygame.K_o:
                         self.actions['action2'] = False
                     if event.key == pygame.K_RETURN:
-                        self.actions['start'] = False  
+                        self.actions['start'] = False
+
+                if event.type == pygame.TEXTINPUT:
+                    self.input_text += event.text
+                    #print(self.input_text)
 
         def update(self):
             self.state_stack[-1].update(self.dt,self.actions)

@@ -1,6 +1,7 @@
-import pygame, os
+import pygame, os, datetime
 from states.state import State
 from data_manager import DataManager
+from states.game_world import GameWorld
 
 class StartMenu(State):
     def __init__(self, game):
@@ -75,6 +76,7 @@ class NewGame(State):
 
         self.new_game_template = {
             "name": "",
+            "edit-time": "",
         }
 
     def update(self, delta_time, actions):
@@ -105,8 +107,6 @@ class NewGame(State):
             text_rect = text_surface.get_rect(center=pos)
             display.blit(text_surface, text_rect)
 
-        
-
         if self.selected_index is not None:
             selected_option, selected_pos = list(self.menu_options.items())[self.selected_index]
             text_rect = self.font.render(selected_option, True, (255, 255, 255)).get_rect()  
@@ -119,8 +119,13 @@ class NewGame(State):
         selected_option = list(self.menu_options.keys())[self.selected_index]
         if selected_option == "Confirm":
             self.new_game_template["name"] = "".join(text)
+            self.new_game_template["edit-time"] = str(datetime.datetime.now())
             self.data_manager.create_save(self.new_game_template, "".join(text), True)
-            pass
+
+            self.game.current_player = "".join(text)
+            new_state = GameWorld(self.game)
+            new_state.enter_state()
+
         elif selected_option == "Back":
             while len(self.game.state_stack) > 1:
                 self.game.state_stack.pop()
@@ -189,8 +194,10 @@ class LoadGame(State):
 
     def transition_state(self, text):
         selected_option = list(self.menu_options.keys())[self.selected_index]
-        if selected_option == "Confirm":
-            pass
+        if selected_option != "":
+            self.game.current_player = selected_option
+            new_state = GameWorld(self.game)
+            new_state.enter_state()
         elif selected_option == "Back":
             while len(self.game.state_stack) > 1:
                 self.game.state_stack.pop()
