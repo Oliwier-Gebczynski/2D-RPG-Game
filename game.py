@@ -1,6 +1,5 @@
 import os, time, pygame, json
-from states.title import StartMenu
-
+from states.intro import IntroScreen
 class Game():
         def __init__(self):
             pygame.init()
@@ -94,7 +93,7 @@ class Game():
             self.font= pygame.font.Font(os.path.join(self.font_dir, "PressStart2P-vaV7.ttf"), 20)
 
         def load_states(self):
-            self.title_screen = StartMenu(self)
+            self.title_screen = IntroScreen(self)
             self.state_stack.append(self.title_screen)
 
         def reset_keys(self):
