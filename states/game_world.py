@@ -8,14 +8,46 @@ class GameWorld(State):
         self.player = Player(self.game)
         self.grass_img = pygame.image.load(os.path.join(self.game.assets_dir, "gfx", "test_bg.jpg"))
         self.font = pygame.font.Font(None, 40)
+        self.tree_img = pygame.image.load(os.path.join(self.game.assets_dir, "gfx", "tree.jpeg"))
+
+        self.map = [
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0],
+            [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0],
+            [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0],
+            [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0],
+            [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0]
+        ]
 
     def update(self, delta_time, actions):
         if actions["start"]:
             pass
-        self.player.update(delta_time, actions)
+        self.player.update(delta_time, actions, self.map)
 
     def render(self, display, input_text):
         display.blit(self.grass_img, (0, 0))
+
+        # Render trees
+        tile_size = self.game.GAME_W // 20
+        self.tree_img = pygame.transform.scale(self.tree_img, (tile_size, tile_size))
+        for y, row in enumerate(self.map):
+            for x, tile in enumerate(row):
+                if tile == 1:
+                    display.blit(self.tree_img, (x * tile_size, y * tile_size))
 
         #player name
         text_surface = self.font.render(self.current_player, True, (255, 255, 255))
@@ -32,14 +64,18 @@ class Player():
         self.position_x, self.position_y = 200, 200
         self.current_frame, self.last_frame_update = 0, 0
 
-    def update(self, delta_time, actions):
+    def update(self, delta_time, actions, game_map):
         direction_x = actions["right"] - actions["left"]
         direction_y = actions["down"] - actions["up"]
 
-        self.position_x += 100 * delta_time * direction_x
-        self.position_y += 100 * delta_time * direction_y
-        print(actions)
-        print("X: " + str(self.position_x) + "Y: " + str(self.position_y))
+        new_position_x = self.position_x + 100 * delta_time * direction_x
+        new_position_y = self.position_y + 100 * delta_time * direction_y
+
+        # Check window boundaries
+        if 0 <= new_position_x <= self.game.GAME_W - self.curr_image.get_width() and 0 <= new_position_y <= self.game.GAME_H - self.curr_image.get_height():
+            # Check map collision
+            if not self.check_collision(new_position_x, new_position_y, game_map):
+                self.position_x, self.position_y = new_position_x, new_position_y
 
         self.animate(delta_time, direction_x, direction_y)
 
@@ -83,3 +119,12 @@ class Player():
 
         self.curr_image = self.front_sprites[0]
         self.curr_anim_list = self.front_sprites
+
+    def check_collision(self, new_x, new_y, game_map):
+        tile_size = self.game.GAME_W // 20
+        tile_x = int(new_x // tile_size)
+        tile_y = int(new_y // tile_size)
+
+        if game_map[tile_y][tile_x] == 1:
+            return True
+        return False

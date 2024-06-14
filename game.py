@@ -1,5 +1,5 @@
 import os, time, pygame, json
-from states.intro import IntroScreen
+from states.load import IntroScreen
 class Game():
         def __init__(self):
             pygame.init()
