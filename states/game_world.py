@@ -6,9 +6,10 @@ class GameWorld(State):
         State.__init__(self, game)
         self.current_player = game.current_player
         self.player = Player(self.game)
-        self.grass_img = pygame.image.load(os.path.join(self.game.assets_dir, "gfx", "test_bg.jpg"))
         self.font = pygame.font.Font(None, 40)
-        self.tree_img = pygame.image.load(os.path.join(self.game.assets_dir, "gfx", "tree.jpeg"))
+        self.tree_img = pygame.image.load(os.path.join(self.game.assets_dir, "gfx", "tree.png"))
+        self.chest_closed = pygame.image.load(os.path.join(self.game.assets_dir, "gfx", "ChestClosed.png"))
+        self.chest_open = pygame.image.load(os.path.join(self.game.assets_dir, "gfx", "ChestOpen.png"))
 
         self.map = [
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -16,7 +17,7 @@ class GameWorld(State):
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 1, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0],
             [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0],
@@ -34,20 +35,27 @@ class GameWorld(State):
         ]
 
     def update(self, delta_time, actions):
+        direction_x = actions["right"] - actions["left"]
+        direction_y = actions["down"] - actions["up"]
+
         if actions["start"]:
             pass
         self.player.update(delta_time, actions, self.map)
+        self.detect_collision(delta_time, direction_x, direction_y, self.map)
 
     def render(self, display, input_text):
-        display.blit(self.grass_img, (0, 0))
+        display.fill((0, 0, 0))
 
         # Render trees
         tile_size = self.game.GAME_W // 20
         self.tree_img = pygame.transform.scale(self.tree_img, (tile_size, tile_size))
+        self.chest_closed = pygame.transform.scale(self.chest_closed, (tile_size, tile_size))
         for y, row in enumerate(self.map):
             for x, tile in enumerate(row):
                 if tile == 1:
                     display.blit(self.tree_img, (x * tile_size, y * tile_size))
+                if tile == 2:
+                    display.blit(self.chest_closed, (x * tile_size, y * tile_size))
 
         #player name
         text_surface = self.font.render(self.current_player, True, (255, 255, 255))
@@ -56,26 +64,52 @@ class GameWorld(State):
 
         self.player.render(display)
 
+    def detect_collision(self, delta_time, direction_x, direction_y, game_map):
+        player_position_x, player_position_y = self.player.get_position()
+
+        new_position_x = player_position_x + 100 * delta_time * direction_x
+        new_position_y = player_position_y + 100 * delta_time * direction_y
+
+        # Check window boundaries
+        if 0 <= new_position_x <= self.game.GAME_W - self.player.curr_image.get_width() and 0 <= new_position_y <= self.game.GAME_H - self.player.curr_image.get_height():
+            # Check map collision
+            if not self.check_collision(new_position_x, new_position_y, game_map):
+                self.player.position_x, self.player.position_y = new_position_x, new_position_y
+
+            if self.check_special_tile_collision(new_position_x, new_position_y, game_map, tile_type=2):
+                self.change_chest_image()
+                print("Chest opened!")
+
+    def check_collision(self, new_x, new_y, game_map):
+        tile_size = self.game.GAME_W // 20
+        tile_x = int(new_x // tile_size)
+        tile_y = int(new_y // tile_size)
+
+        if game_map[tile_y][tile_x] == 1:
+            return True
+        return False
+
+    def check_special_tile_collision(self, new_x, new_y, game_map, tile_type):
+        tile_size = self.game.GAME_W // 20
+        tile_x = int(new_x // tile_size)
+        tile_y = int(new_y // tile_size)
+
+        if game_map[tile_y][tile_x] == tile_type:
+            return True
+        return False
+    def change_chest_image(self):
+        self.chest_closed = self.chest_open
 
 class Player():
     def __init__(self, game):
         self.game = game
         self.load_sprites()
-        self.position_x, self.position_y = 200, 200
+        self.position_x, self.position_y = 0, 0
         self.current_frame, self.last_frame_update = 0, 0
 
     def update(self, delta_time, actions, game_map):
         direction_x = actions["right"] - actions["left"]
         direction_y = actions["down"] - actions["up"]
-
-        new_position_x = self.position_x + 100 * delta_time * direction_x
-        new_position_y = self.position_y + 100 * delta_time * direction_y
-
-        # Check window boundaries
-        if 0 <= new_position_x <= self.game.GAME_W - self.curr_image.get_width() and 0 <= new_position_y <= self.game.GAME_H - self.curr_image.get_height():
-            # Check map collision
-            if not self.check_collision(new_position_x, new_position_y, game_map):
-                self.position_x, self.position_y = new_position_x, new_position_y
 
         self.animate(delta_time, direction_x, direction_y)
 
@@ -120,11 +154,7 @@ class Player():
         self.curr_image = self.front_sprites[0]
         self.curr_anim_list = self.front_sprites
 
-    def check_collision(self, new_x, new_y, game_map):
-        tile_size = self.game.GAME_W // 20
-        tile_x = int(new_x // tile_size)
-        tile_y = int(new_y // tile_size)
+    def get_position(self):
+        return self.position_x, self.position_y
 
-        if game_map[tile_y][tile_x] == 1:
-            return True
-        return False
+
