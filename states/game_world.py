@@ -1,4 +1,4 @@
-import pygame, os
+import pygame, os, random, item
 from states.state import State
 
 class GameWorld(State):
@@ -7,9 +7,11 @@ class GameWorld(State):
         self.current_player = game.current_player
         self.player = Player(self.game)
         self.font = pygame.font.Font(None, 40)
+        self.small_font = pygame.font.Font(None, 15)
         self.tree_img = pygame.image.load(os.path.join(self.game.assets_dir, "gfx", "tree.png"))
         self.chest_closed = pygame.image.load(os.path.join(self.game.assets_dir, "gfx", "ChestClosed.png"))
         self.chest_open = pygame.image.load(os.path.join(self.game.assets_dir, "gfx", "ChestOpen.png"))
+        self.tile_size = self.game.GAME_W // 20
 
         self.map = [
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -27,7 +29,7 @@ class GameWorld(State):
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 2, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0],
             [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0],
@@ -47,20 +49,31 @@ class GameWorld(State):
         display.fill((0, 0, 0))
 
         # Render trees
-        tile_size = self.game.GAME_W // 20
-        self.tree_img = pygame.transform.scale(self.tree_img, (tile_size, tile_size))
-        self.chest_closed = pygame.transform.scale(self.chest_closed, (tile_size, tile_size))
+        self.tree_img = pygame.transform.scale(self.tree_img, (self.tile_size, self.tile_size))
+        self.chest_closed = pygame.transform.scale(self.chest_closed, (self.tile_size, self.tile_size))
+        self.chest_open = pygame.transform.scale(self.chest_open, (self.tile_size, self.tile_size))
         for y, row in enumerate(self.map):
             for x, tile in enumerate(row):
                 if tile == 1:
-                    display.blit(self.tree_img, (x * tile_size, y * tile_size))
+                    display.blit(self.tree_img, (x * self.tile_size, y * self.tile_size))
                 if tile == 2:
-                    display.blit(self.chest_closed, (x * tile_size, y * tile_size))
+                    display.blit(self.chest_closed, (x * self.tile_size, y * self.tile_size))
+                if tile == 3:
+                    display.blit(self.chest_open, (x * self.tile_size, y * self.tile_size))
 
         #player name
         text_surface = self.font.render(self.current_player, True, (255, 255, 255))
         text_rect = text_surface.get_rect(center= (self.game.GAME_W * 0.1, self.game.GAME_H * 0.1))
         display.blit(text_surface, text_rect)
+
+        #player items
+        offset = 0
+        for item in self.player.items:
+            text_surface = self.small_font.render(item.name, True, (255, 255, 255))
+            text_rect = text_surface.get_rect(center= (self.game.GAME_W * 0.9, self.game.GAME_H * 0.1 + offset))
+            display.blit(text_surface, text_rect)
+            offset += 20
+
 
         self.player.render(display)
 
@@ -77,13 +90,14 @@ class GameWorld(State):
                 self.player.position_x, self.player.position_y = new_position_x, new_position_y
 
             if self.check_special_tile_collision(new_position_x, new_position_y, game_map, tile_type=2):
-                self.change_chest_image()
+                self.player.items.append(self.get_random_item())
+                game_map[int(new_position_y // self.tile_size)][int(new_position_x // self.tile_size)] = 3
                 print("Chest opened!")
 
     def check_collision(self, new_x, new_y, game_map):
-        tile_size = self.game.GAME_W // 20
-        tile_x = int(new_x // tile_size)
-        tile_y = int(new_y // tile_size)
+
+        tile_x = int(new_x // self.tile_size)
+        tile_y = int(new_y // self.tile_size)
 
         if game_map[tile_y][tile_x] == 1:
             return True
@@ -97,8 +111,12 @@ class GameWorld(State):
         if game_map[tile_y][tile_x] == tile_type:
             return True
         return False
-    def change_chest_image(self):
-        self.chest_closed = self.chest_open
+
+    def get_random_item(self):
+        items = [item.Sword("Longsword of Doom", "A magnificent sword with great attack power.", 20),
+                 item.Armor("Dragon Armor", "Heavy armor providing excellent protection.", 50),
+                 item.GoldenApple("Golden Apple", "A legendary fruit with magical stamina increase.", 100)]
+        return random.choice(items)
 
 class Player():
     def __init__(self, game):
@@ -106,6 +124,12 @@ class Player():
         self.load_sprites()
         self.position_x, self.position_y = 0, 0
         self.current_frame, self.last_frame_update = 0, 0
+        self.items = []
+
+        self.hp = 100
+        self.attack = 10
+        self.stamina = 100
+        self.lvl = 0
 
     def update(self, delta_time, actions, game_map):
         direction_x = actions["right"] - actions["left"]
