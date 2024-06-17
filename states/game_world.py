@@ -9,14 +9,16 @@ class GameWorld(State):
         self.font = pygame.font.Font(None, 40)
         self.small_font = pygame.font.Font(None, 15)
         self.tree_img = pygame.image.load(os.path.join(self.game.assets_dir, "gfx", "tree.png"))
+        self.priest_img = pygame.image.load(os.path.join(self.game.assets_dir, "gfx", "priest.png"))
         self.chest_closed = pygame.image.load(os.path.join(self.game.assets_dir, "gfx", "ChestClosed.png"))
         self.chest_open = pygame.image.load(os.path.join(self.game.assets_dir, "gfx", "ChestOpen.png"))
         self.tile_size = self.game.GAME_W // 20
+        self.display_hint = False
 
         self.map = [
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 1, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -44,6 +46,7 @@ class GameWorld(State):
             pass
         self.player.update(delta_time, actions, self.map)
         self.detect_collision(delta_time, direction_x, direction_y, self.map)
+        print(self.display_hint)
 
     def render(self, display, input_text):
         display.fill((0, 0, 0))
@@ -52,6 +55,7 @@ class GameWorld(State):
         self.tree_img = pygame.transform.scale(self.tree_img, (self.tile_size, self.tile_size))
         self.chest_closed = pygame.transform.scale(self.chest_closed, (self.tile_size, self.tile_size))
         self.chest_open = pygame.transform.scale(self.chest_open, (self.tile_size, self.tile_size))
+        self.priest_img = pygame.transform.scale(self.priest_img, (self.tile_size, self.tile_size))
         for y, row in enumerate(self.map):
             for x, tile in enumerate(row):
                 if tile == 1:
@@ -60,6 +64,8 @@ class GameWorld(State):
                     display.blit(self.chest_closed, (x * self.tile_size, y * self.tile_size))
                 if tile == 3:
                     display.blit(self.chest_open, (x * self.tile_size, y * self.tile_size))
+                if tile == 4:
+                    display.blit(self.priest_img, (x * self.tile_size, y * self.tile_size))
 
         #player name
         text_surface = self.font.render(self.current_player, True, (255, 255, 255))
@@ -74,6 +80,25 @@ class GameWorld(State):
             display.blit(text_surface, text_rect)
             offset += 20
 
+        if self.display_hint == True:
+            print("Display hint diziala")
+            black_background = pygame.Surface((self.game.GAME_W, self.game.GAME_H * 0.6)) # Adjust width and height as needed
+            black_background.fill((0, 0, 0))
+
+            controls_text = [
+                "Greetings, traveler. I sense trouble in your heart. What brings you to our humble village?",
+                "The villagers are plagued by monsters from the woods.",
+                "Defeat these beasts and you'll earn reward and gratitude.",
+                "Beware, for they are strong and cunning.",
+                "I believe in your strength and the divine power that guides you.",
+                "Go forth and vanquish the evil that plagues our land. Good luck!",
+            ]
+
+            for i, text in enumerate(controls_text):
+                text_surface = self.small_font.render(text, True, (255, 255, 255))
+                text_rect = text_surface.get_rect(center=(black_background.get_width() * 0.5, 15 + i * 30))
+                black_background.blit(text_surface, text_rect)
+                display.blit(black_background, (0, self.game.GAME_H * 0.2))
 
         self.player.render(display)
 
@@ -89,10 +114,19 @@ class GameWorld(State):
             if not self.check_collision(new_position_x, new_position_y, game_map):
                 self.player.position_x, self.player.position_y = new_position_x, new_position_y
 
+            if self.check_special_tile_collision(new_position_x, new_position_y, game_map, tile_type=0):
+                self.display_hint = False
+
             if self.check_special_tile_collision(new_position_x, new_position_y, game_map, tile_type=2):
                 self.player.items.append(self.get_random_item())
                 game_map[int(new_position_y // self.tile_size)][int(new_position_x // self.tile_size)] = 3
-                print("Chest opened!")
+                #print("Chest opened!")
+
+            if self.check_special_tile_collision(new_position_x, new_position_y, game_map, tile_type=4):
+                self.display_hint = True
+                #print("Hint tile found!")
+
+            #self.display_hint = False
 
     def check_collision(self, new_x, new_y, game_map):
 
