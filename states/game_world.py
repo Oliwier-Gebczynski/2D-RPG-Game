@@ -15,6 +15,15 @@ class GameWorld(State):
         self.tile_size = self.game.GAME_W // 20
         self.display_hint = False
 
+        self.bar_width = 150
+        self.bar_height = 20
+        self.bar_margin = 10
+
+        # Create bar objects using player properties
+        self.hp_bar = Bar(self.bar_margin, self.game.GAME_H - self.bar_height - self.bar_margin, self.bar_width, self.bar_height, (255, 0, 0), "HP")
+        self.stamina_bar = Bar(self.bar_margin + self.bar_width + self.bar_margin * 2, self.game.GAME_H - self.bar_height - self.bar_margin, self.bar_width, self.bar_height, (0, 255, 0), "Stamina")
+        self.level_bar = Bar(self.bar_margin, self.game.GAME_H - self.bar_height * 2 - self.bar_margin * 2, self.bar_width, self.bar_height, (0, 0, 255), "LVL")
+
         self.map = [
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -46,7 +55,10 @@ class GameWorld(State):
             pass
         self.player.update(delta_time, actions, self.map)
         self.detect_collision(delta_time, direction_x, direction_y, self.map)
-        print(self.display_hint)
+
+        self.hp_bar.update(self.player.get_hp(), self.player.get_max_hp())
+        self.stamina_bar.update(self.player.get_stamina(), self.player.get_max_stamina())
+        self.level_bar.update(self.player.get_level(), self.player.get_max_level())
 
     def render(self, display, input_text):
         display.fill((0, 0, 0))
@@ -81,7 +93,6 @@ class GameWorld(State):
             offset += 20
 
         if self.display_hint == True:
-            print("Display hint diziala")
             black_background = pygame.Surface((self.game.GAME_W, self.game.GAME_H * 0.6)) # Adjust width and height as needed
             black_background.fill((0, 0, 0))
 
@@ -101,6 +112,11 @@ class GameWorld(State):
                 display.blit(black_background, (0, self.game.GAME_H * 0.2))
 
         self.player.render(display)
+
+        # display bars
+        self.hp_bar.draw(display, self.player.get_max_hp())
+        self.stamina_bar.draw(display, self.player.get_max_stamina())
+        self.level_bar.draw(display, self.player.get_max_level())
 
     def detect_collision(self, delta_time, direction_x, direction_y, game_map):
         player_position_x, player_position_y = self.player.get_position()
@@ -148,7 +164,7 @@ class GameWorld(State):
 
     def get_random_item(self):
         items = [item.Sword("Longsword of Doom", "A magnificent sword with great attack power.", 20),
-                 item.Armor("Dragon Armor", "Heavy armor providing excellent protection.", 50),
+                 item.Armor("Dragon Armor", "Heavy armor providing excellent protection.", -50),
                  item.GoldenApple("Golden Apple", "A legendary fruit with magical stamina increase.", 100)]
         return random.choice(items)
 
@@ -159,10 +175,17 @@ class Player():
         self.position_x, self.position_y = 0, 0
         self.current_frame, self.last_frame_update = 0, 0
         self.items = []
+        self.item_iterator = 0
 
         self.hp = 100
-        self.attack = 10
+        self.max_hp = 100
+
         self.stamina = 100
+        self.max_stamina = 100
+
+        self.attack = 10
+
+        self.max_lvl = 100
         self.lvl = 0
 
     def update(self, delta_time, actions, game_map):
@@ -170,6 +193,7 @@ class Player():
         direction_y = actions["down"] - actions["up"]
 
         self.animate(delta_time, direction_x, direction_y)
+        self.item_action()
 
     def render(self, display):
         display.blit(self.curr_image, (self.position_x, self.position_y))
@@ -212,7 +236,68 @@ class Player():
         self.curr_image = self.front_sprites[0]
         self.curr_anim_list = self.front_sprites
 
+    def item_action(self):
+        if self.item_iterator != len(self.items):
+            last_item = self.items[-1]
+
+            if last_item.name == "Longsword of Doom":
+                self.attack += last_item.attack
+                print("Sword")
+            elif last_item.name == "Dragon Armor":
+                self.hp += last_item.defense
+                self.max_hp += last_item.defense
+                print("Armor")
+            elif last_item.name == "Golden Apple":
+                self.stamina += last_item.healing_power
+                self.max_stamina += last_item.healing_power
+                print("Apple")
+
+            self.item_iterator += 1
+
     def get_position(self):
         return self.position_x, self.position_y
 
+    def get_hp(self):
+        return self.hp
 
+    def get_stamina(self):
+        return self.stamina
+
+    def get_level(self):
+        return self.lvl
+
+    def get_max_hp(self):
+        return self.max_hp
+
+    def get_max_stamina(self):
+        return self.max_stamina
+
+    def get_max_level(self):
+        return self.max_lvl
+
+class Bar:
+    def __init__(self, x, y, width, height, color, text):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.color = color
+        self.text = text
+        self.value = 0
+
+    def draw(self, screen, max_points):
+        pygame.draw.rect(screen, (0, 0, 0), (self.x, self.y, self.width, self.height))
+
+        fill_percent = min(self.value / max_points, 1)
+
+        fill_height = int(fill_percent * self.height)
+
+        pygame.draw.rect(screen, self.color, (self.x, self.y + self.height - fill_height, self.width, fill_height))
+
+        font = pygame.font.Font(None, 16)
+        text_surface = font.render(f"{self.text}: {self.value}/{max_points}", True, (255, 255, 255))
+        text_rect = text_surface.get_rect(center=(self.x + self.width // 2, self.y + self.height // 2))
+        screen.blit(text_surface, text_rect)
+
+    def update(self, value, max_points):
+        self.value = max(0, min(value, max_points))
