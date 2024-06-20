@@ -1,6 +1,6 @@
 import os
 import json
-import datetime
+import re
 
 class DataManager:
     def __init__(self):
@@ -49,10 +49,11 @@ class DataManager:
                 save_names.append(save_dir)
         return save_names
 
-    # New method to save player data
     def save_player_data(self, player_data, save_name, overwrite=False):
+        if not re.match(r'^[a-zA-Z0-9_-]+$', save_name):
+            raise ValueError("Invalid save name format. Must be alphanumeric with underscores and dashes.")
+
         self.create_save(player_data, save_name, overwrite)
 
-    # New method to load player data
     def load_player_data(self, save_name):
         return self.load_save(save_name)

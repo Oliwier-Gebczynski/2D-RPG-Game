@@ -73,12 +73,6 @@ class NewGame(State):
                              "Back": (self.game.GAME_W * 0.6, self.game.GAME_H * 0.8)}  
 
         self.selected_index = 0
-
-        self.new_game_template = {
-            "name": "",
-            "edit-time": "",
-        }
-
     def update(self, delta_time, actions):
         if actions["right"]:
             self.selected_index = (self.selected_index + 1) % len(self.menu_options)
@@ -118,9 +112,20 @@ class NewGame(State):
     def transition_state(self, text):
         selected_option = list(self.menu_options.keys())[self.selected_index]
         if selected_option == "Confirm":
-            self.new_game_template["name"] = "".join(text)
-            self.new_game_template["edit-time"] = str(datetime.datetime.now())
-            self.data_manager.create_save(self.new_game_template, "".join(text), True)
+            player_data = {
+                "position_x": 0,
+                "position_y": 0,
+                "items": [],
+                "hp": 100,
+                "max_hp": 100,
+                "stamina": 100,
+                "max_stamina": 100,
+                "attack": 1,
+                "lvl": 1,
+                "max_lvl": 100,
+            }
+
+            self.data_manager.create_save(player_data, "".join(text), True)
 
             self.game.current_player = "".join(text)
             new_state = GameWorld(self.game)

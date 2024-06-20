@@ -1,4 +1,4 @@
-import pygame, os, random, item, data_manager
+import pygame, os, random, item, data_manager, threading
 from states.state import State
 from enemy import Enemy
 
@@ -41,29 +41,29 @@ class GameWorld(State):
         self.level_bar = Bar(350, 400 + 4*self.bar_margin, self.bar_width, self.bar_height, (0, 0, 255), "LVL")
 
         self.map = [
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+            [0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+            [1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0],
+            [0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 1, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 4, 0, 0, 0],
-            [0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0],
-            [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0],
-            [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 2, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0],
-            [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0],
-            [5, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0]
+            [0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+            [2, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+            [1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1],
+            [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1],
+            [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1],
+            [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1]
         ]
 
-        self.enemies = [Enemy(100,200,50,self.enemy), Enemy(150,200,50,self.enemy)]
+        self.enemies = [Enemy(100,200,50,self.enemy), Enemy(150,200,50,self.enemy), Enemy(150,200,50,self.enemy),Enemy(150,200,50,self.enemy),Enemy(150,200,50,self.enemy),Enemy(150,200,50,self.enemy),Enemy(150,200,50,self.enemy),Enemy(150,200,50,self.enemy),Enemy(150,200,50,self.enemy),Enemy(150,200,50,self.enemy)]
     def update(self, delta_time, actions):
         direction_x = actions["right"] - actions["left"]
         direction_y = actions["down"] - actions["up"]
@@ -82,19 +82,23 @@ class GameWorld(State):
         self.player.update(delta_time, actions, self.map)
         self.detect_collision(delta_time, direction_x, direction_y, self.map)
 
-        self.hp_bar.update(self.player.get_hp(), self.player.get_max_hp())
-        self.stamina_bar.update(self.player.get_stamina(), self.player.get_max_stamina())
-        self.level_bar.update(self.player.get_level(), self.player.get_max_level())
+        self.hp_bar.async_update(self.player.get_hp())
+        self.stamina_bar.async_update(self.player.get_stamina())
+        self.level_bar.async_update(self.player.get_level())
 
         for enemy in self.enemies:
             enemy.update(delta_time, self.map, self.tile_size)
             if self.check_enemy_collision(self.player, enemy):
                 self.player.hp -= enemy.attack
                 enemy.hp -= self.player.attack
-                self.player.stamina -= 0.5
+                self.player.stamina -= 0.2
+                print(enemy.hp)
 
-                if enemy.hp == 0:
+                if enemy.hp <= 0:
+                    self.player.lvl += 1
+                    print("Zabity")
                     self.enemies.remove(enemy)
+                    self.enemies.append(Enemy(100,200,50,self.enemy))
 
     def render(self, display, input_text):
         display.fill((0, 0, 0))
@@ -206,7 +210,7 @@ class GameWorld(State):
         enemy_rect = pygame.Rect(enemy.x, enemy.y, 20, 20)
         return player_rect.colliderect(enemy_rect)
     def get_random_item(self):
-        items = [item.Sword("Longsword of Doom", "A magnificent sword with great attack power.", .5),
+        items = [item.Sword("Longsword of Doom", "A magnificent sword with great attack power.", 1),
                  item.Armor("Dragon Armor", "Heavy armor providing excellent protection.", 50),
                  item.GoldenApple("Golden Apple", "A legendary fruit with magical stamina increase.", 100)]
         return random.choice(items)
@@ -358,11 +362,13 @@ class Bar:
         self.color = color
         self.text = text
         self.value = 0
+        self.lock = threading.Lock()
 
     def draw(self, screen, max_points):
         pygame.draw.rect(screen, (0, 0, 0), (self.x, self.y, self.width, self.height))
 
-        fill_percent = min(self.value / max_points, 1)
+        with self.lock:
+            fill_percent = min(self.value / max_points, 1)
 
         fill_height = int(fill_percent * self.height)
 
@@ -373,5 +379,6 @@ class Bar:
         text_rect = text_surface.get_rect(center=(self.x + self.width // 2, self.y + self.height // 2))
         screen.blit(text_surface, text_rect)
 
-    def update(self, value, max_points):
-        self.value = max(0, min(value, max_points))
+    def async_update(self, new_value):
+        with self.lock:
+            self.value = new_value
