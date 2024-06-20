@@ -45,6 +45,10 @@ class Game():
                         self.actions['start'] = True  
                     if event.key == pygame.K_BACKSPACE:
                         self.input_text = self.input_text[:-1]
+                    if event.key == pygame.K_s:
+                        self.actions['action1'] = True
+                    if event.key == pygame.K_o:
+                        self.actions['action2'] = True
                         
                 if event.type == pygame.KEYUP:
                     if event.key == pygame.K_LEFT:
@@ -55,7 +59,7 @@ class Game():
                         self.actions['up'] = False
                     if event.key == pygame.K_DOWN:
                         self.actions['down'] = False
-                    if event.key == pygame.K_p:
+                    if event.key == pygame.K_s:
                         self.actions['action1'] = False
                     if event.key == pygame.K_o:
                         self.actions['action2'] = False

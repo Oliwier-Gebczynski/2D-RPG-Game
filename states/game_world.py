@@ -1,18 +1,34 @@
-import pygame, os, random, item
+import pygame, os, random, item, data_manager
 from states.state import State
+from enemy import Enemy
 
 class GameWorld(State):
     def __init__(self, game):
         State.__init__(self, game)
+        self.tile_size = self.game.GAME_W // 20
         self.current_player = game.current_player
-        self.player = Player(self.game)
+        self.data_manager = data_manager.DataManager()
+
+        self.player = None
+
+        try:
+            player_data = self.data_manager.load_player_data(self.current_player)
+            self.player = Player(self.game)
+            self.player.from_dict(player_data)
+        except FileNotFoundError:
+            print(f"Player data for '{self.current_player}' not found. Creating new player...")
+            self.player = Player(self.game)
+
         self.font = pygame.font.Font(None, 40)
         self.small_font = pygame.font.Font(None, 15)
         self.tree_img = pygame.image.load(os.path.join(self.game.assets_dir, "gfx", "tree.png"))
         self.priest_img = pygame.image.load(os.path.join(self.game.assets_dir, "gfx", "priest.png"))
         self.chest_closed = pygame.image.load(os.path.join(self.game.assets_dir, "gfx", "ChestClosed.png"))
         self.chest_open = pygame.image.load(os.path.join(self.game.assets_dir, "gfx", "ChestOpen.png"))
-        self.tile_size = self.game.GAME_W // 20
+
+        self.enemy = pygame.image.load(os.path.join(self.game.assets_dir, "gfx", "enemy.png"))
+        self.enemy = pygame.transform.scale(self.enemy, (self.tile_size, self.tile_size))
+
         self.display_hint = False
 
         self.bar_width = 150
@@ -47,18 +63,38 @@ class GameWorld(State):
             [5, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0]
         ]
 
+        self.enemies = [Enemy(100,200,50,self.enemy), Enemy(150,200,50,self.enemy)]
     def update(self, delta_time, actions):
         direction_x = actions["right"] - actions["left"]
         direction_y = actions["down"] - actions["up"]
 
+        if direction_x != 0 or direction_y != 0:
+            self.player.reduce_stamina(0.1)
+        else:
+            self.player.recover_stamina(0.1)
+
         if actions["start"]:
             pass
+
+        if actions["action1"]:
+            self.data_manager.save_player_data(self.player.to_dict(), self.current_player, True)
+
         self.player.update(delta_time, actions, self.map)
         self.detect_collision(delta_time, direction_x, direction_y, self.map)
 
         self.hp_bar.update(self.player.get_hp(), self.player.get_max_hp())
         self.stamina_bar.update(self.player.get_stamina(), self.player.get_max_stamina())
         self.level_bar.update(self.player.get_level(), self.player.get_max_level())
+
+        for enemy in self.enemies:
+            enemy.update(delta_time, self.map, self.tile_size)
+            if self.check_enemy_collision(self.player, enemy):
+                self.player.hp -= enemy.attack
+                enemy.hp -= self.player.attack
+                self.player.stamina -= 0.5
+
+                if enemy.hp == 0:
+                    self.enemies.remove(enemy)
 
     def render(self, display, input_text):
         display.fill((0, 0, 0))
@@ -68,6 +104,7 @@ class GameWorld(State):
         self.chest_closed = pygame.transform.scale(self.chest_closed, (self.tile_size, self.tile_size))
         self.chest_open = pygame.transform.scale(self.chest_open, (self.tile_size, self.tile_size))
         self.priest_img = pygame.transform.scale(self.priest_img, (self.tile_size, self.tile_size))
+
         for y, row in enumerate(self.map):
             for x, tile in enumerate(row):
                 if tile == 1:
@@ -79,9 +116,9 @@ class GameWorld(State):
                 if tile == 4:
                     display.blit(self.priest_img, (x * self.tile_size, y * self.tile_size))
 
-        #player name
-        text_surface = self.font.render(self.current_player, True, (255, 255, 255))
-        text_rect = text_surface.get_rect(center= (self.game.GAME_W * 0.1, self.game.GAME_H * 0.1))
+        #player title items
+        text_surface = self.font.render("Items", True, (255, 255, 255))
+        text_rect = text_surface.get_rect(center= (self.game.GAME_W * 0.9, self.game.GAME_H * 0.05))
         display.blit(text_surface, text_rect)
 
         #player items
@@ -118,7 +155,14 @@ class GameWorld(State):
         self.stamina_bar.draw(display, self.player.get_max_stamina())
         self.level_bar.draw(display, self.player.get_max_level())
 
+        # display enemy
+        for enemy in self.enemies:
+            enemy.render(display)
+
     def detect_collision(self, delta_time, direction_x, direction_y, game_map):
+        if self.player.get_stamina() <= 0:
+            return
+
         player_position_x, player_position_y = self.player.get_position()
 
         new_position_x = player_position_x + 100 * delta_time * direction_x
@@ -136,16 +180,9 @@ class GameWorld(State):
             if self.check_special_tile_collision(new_position_x, new_position_y, game_map, tile_type=2):
                 self.player.items.append(self.get_random_item())
                 game_map[int(new_position_y // self.tile_size)][int(new_position_x // self.tile_size)] = 3
-                #print("Chest opened!")
 
             if self.check_special_tile_collision(new_position_x, new_position_y, game_map, tile_type=4):
                 self.display_hint = True
-
-            if self.check_special_tile_collision(new_position_x, new_position_y, game_map, tile_type=5):
-                self.player.hp -= 1
-                #print("Hint tile found!")
-
-            #self.display_hint = False
 
     def check_collision(self, new_x, new_y, game_map):
 
@@ -164,9 +201,12 @@ class GameWorld(State):
         if game_map[tile_y][tile_x] == tile_type:
             return True
         return False
-
+    def check_enemy_collision(self, player, enemy):
+        player_rect = pygame.Rect(player.position_x, player.position_y, 20, 20)
+        enemy_rect = pygame.Rect(enemy.x, enemy.y, 20, 20)
+        return player_rect.colliderect(enemy_rect)
     def get_random_item(self):
-        items = [#item.Sword("Longsword of Doom", "A magnificent sword with great attack power.", 20),
+        items = [item.Sword("Longsword of Doom", "A magnificent sword with great attack power.", .5),
                  item.Armor("Dragon Armor", "Heavy armor providing excellent protection.", 50),
                  item.GoldenApple("Golden Apple", "A legendary fruit with magical stamina increase.", 100)]
         return random.choice(items)
@@ -186,7 +226,7 @@ class Player():
         self.stamina = 100
         self.max_stamina = 100
 
-        self.attack = 10
+        self.attack = 1
 
         self.max_lvl = 100
         self.lvl = 1
@@ -257,6 +297,11 @@ class Player():
 
             self.item_iterator += 1
 
+    def reduce_stamina(self, amount):
+        self.stamina = max(0, self.stamina - amount)
+
+    def recover_stamina(self, amount):
+        self.stamina = min(self.stamina + amount, self.max_stamina)
     def get_position(self):
         return self.position_x, self.position_y
 
@@ -277,6 +322,32 @@ class Player():
 
     def get_max_level(self):
         return self.max_lvl
+
+    def to_dict(self):
+        return {
+            "position_x": self.position_x,
+            "position_y": self.position_y,
+            "items": [item.to_dict() for item in self.items],
+            "hp": self.hp,
+            "max_hp": self.max_hp,
+            "stamina": self.stamina,
+            "max_stamina": self.max_stamina,
+            "attack": self.attack,
+            "lvl": self.lvl,
+            "max_lvl": self.max_lvl,
+        }
+
+    def from_dict(self, data):
+        self.position_x = data["position_x"]
+        self.position_y = data["position_y"]
+        self.items = [item.Item.from_dict(item_data) for item_data in data["items"]]
+        self.hp = data["hp"]
+        self.max_hp = data["max_hp"]
+        self.stamina = data["stamina"]
+        self.max_stamina = data["max_stamina"]
+        self.attack = data["attack"]
+        self.lvl = data["lvl"]
+        self.max_lvl = data["max_lvl"]
 
 class Bar:
     def __init__(self, x, y, width, height, color, text):

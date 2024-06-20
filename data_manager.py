@@ -1,5 +1,6 @@
 import os
 import json
+import datetime
 
 class DataManager:
     def __init__(self):
@@ -16,6 +17,8 @@ class DataManager:
                 return
 
         save_path = os.path.join(save_dir, f"{save_name}.json")
+
+        save_data["name"] = save_name
 
         if os.path.exists(save_path) and not overwrite:
             print(f"Save file '{save_name}' already exists. Use 'overwrite=True' to overwrite.")
@@ -45,3 +48,11 @@ class DataManager:
             if os.path.isdir(os.path.join(self.saves_dir, save_dir)):
                 save_names.append(save_dir)
         return save_names
+
+    # New method to save player data
+    def save_player_data(self, player_data, save_name, overwrite=False):
+        self.create_save(player_data, save_name, overwrite)
+
+    # New method to load player data
+    def load_player_data(self, save_name):
+        return self.load_save(save_name)
