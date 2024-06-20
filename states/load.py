@@ -6,7 +6,7 @@ class IntroScreen(State):
     def __init__(self, game):
         State.__init__(self, game)
 
-        self.font = pygame.font.Font(None, 24)  # Adjust font size as needed
+        self.font = pygame.font.Font(None, 24) 
         self.view_time = 0
     def update(self, delta_time, actions):
         self.game.reset_keys()

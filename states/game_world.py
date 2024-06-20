@@ -134,7 +134,7 @@ class GameWorld(State):
             offset += 20
 
         if self.display_hint == True:
-            black_background = pygame.Surface((self.game.GAME_W, self.game.GAME_H * 0.6)) # Adjust width and height as needed
+            black_background = pygame.Surface((self.game.GAME_W, self.game.GAME_H * 0.6))
             black_background.fill((0, 0, 0))
 
             controls_text = [
