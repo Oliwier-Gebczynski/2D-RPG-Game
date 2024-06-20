@@ -20,9 +20,9 @@ class GameWorld(State):
         self.bar_margin = 10
 
         # Create bar objects using player properties
-        self.hp_bar = Bar(self.bar_margin, self.game.GAME_H - self.bar_height - self.bar_margin, self.bar_width, self.bar_height, (255, 0, 0), "HP")
-        self.stamina_bar = Bar(self.bar_margin + self.bar_width + self.bar_margin * 2, self.game.GAME_H - self.bar_height - self.bar_margin, self.bar_width, self.bar_height, (0, 255, 0), "Stamina")
-        self.level_bar = Bar(self.bar_margin, self.game.GAME_H - self.bar_height * 2 - self.bar_margin * 2, self.bar_width, self.bar_height, (0, 0, 255), "LVL")
+        self.hp_bar = Bar(350, 400, self.bar_width, self.bar_height, (255, 0, 0), "HP")
+        self.stamina_bar = Bar(350, 400 + 2*self.bar_margin, self.bar_width, self.bar_height, (0, 255, 0), "Stamina")
+        self.level_bar = Bar(350, 400 + 4*self.bar_margin, self.bar_width, self.bar_height, (0, 0, 255), "LVL")
 
         self.map = [
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -31,7 +31,7 @@ class GameWorld(State):
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 1, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 4, 0, 0, 0],
             [0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0],
             [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0],
             [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0],
@@ -44,7 +44,7 @@ class GameWorld(State):
             [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0],
             [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0],
-            [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0]
+            [5, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0]
         ]
 
     def update(self, delta_time, actions):
@@ -140,6 +140,9 @@ class GameWorld(State):
 
             if self.check_special_tile_collision(new_position_x, new_position_y, game_map, tile_type=4):
                 self.display_hint = True
+
+            if self.check_special_tile_collision(new_position_x, new_position_y, game_map, tile_type=5):
+                self.player.hp -= 1
                 #print("Hint tile found!")
 
             #self.display_hint = False
@@ -163,8 +166,8 @@ class GameWorld(State):
         return False
 
     def get_random_item(self):
-        items = [item.Sword("Longsword of Doom", "A magnificent sword with great attack power.", 20),
-                 item.Armor("Dragon Armor", "Heavy armor providing excellent protection.", -50),
+        items = [#item.Sword("Longsword of Doom", "A magnificent sword with great attack power.", 20),
+                 item.Armor("Dragon Armor", "Heavy armor providing excellent protection.", 50),
                  item.GoldenApple("Golden Apple", "A legendary fruit with magical stamina increase.", 100)]
         return random.choice(items)
 
@@ -186,7 +189,7 @@ class Player():
         self.attack = 10
 
         self.max_lvl = 100
-        self.lvl = 0
+        self.lvl = 1
 
     def update(self, delta_time, actions, game_map):
         direction_x = actions["right"] - actions["left"]
