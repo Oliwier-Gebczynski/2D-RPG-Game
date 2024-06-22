@@ -42,9 +42,9 @@ class GameWorld(State):
 
         self.map = [
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-            [0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+            [0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0, 0, 0, 0],
             [1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0],
             [0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -63,6 +63,8 @@ class GameWorld(State):
             [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1]
         ]
 
+        self.end_game = False
+
         self.enemies = [Enemy(100,200,50,self.enemy), Enemy(150,200,50,self.enemy), Enemy(150,200,50,self.enemy),Enemy(150,200,50,self.enemy),Enemy(150,200,50,self.enemy),Enemy(150,200,50,self.enemy),Enemy(150,200,50,self.enemy),Enemy(150,200,50,self.enemy),Enemy(150,200,50,self.enemy),Enemy(150,200,50,self.enemy)]
     def update(self, delta_time, actions):
         direction_x = actions["right"] - actions["left"]
@@ -72,6 +74,8 @@ class GameWorld(State):
             self.player.reduce_stamina(0.1)
         else:
             self.player.recover_stamina(0.1)
+            self.player.recover_hp(0.01)
+
 
         if actions["start"]:
             pass
@@ -91,17 +95,25 @@ class GameWorld(State):
             if self.check_enemy_collision(self.player, enemy):
                 self.player.hp -= enemy.attack
                 enemy.hp -= self.player.attack
-                self.player.stamina -= 0.2
+                self.player.stamina -= 10
                 print(enemy.hp)
 
                 if enemy.hp <= 0:
                     self.player.lvl += 1
                     print("Zabity")
                     self.enemies.remove(enemy)
-                    self.enemies.append(Enemy(100,200,50,self.enemy))
+
+                if len(self.enemies) == 0:
+                    self.end_game = True
 
     def render(self, display, input_text):
         display.fill((0, 0, 0))
+
+        self.player.render(display)
+
+        # display enemy
+        for enemy in self.enemies:
+            enemy.render(display)
 
         # Render trees
         self.tree_img = pygame.transform.scale(self.tree_img, (self.tile_size, self.tile_size))
@@ -152,16 +164,27 @@ class GameWorld(State):
                 black_background.blit(text_surface, text_rect)
                 display.blit(black_background, (0, self.game.GAME_H * 0.2))
 
-        self.player.render(display)
+        if self.end_game == True:
+            black_background = pygame.Surface((self.game.GAME_W, self.game.GAME_H * 0.6))
+            black_background.fill((0, 0, 0))
+
+            controls_text = [
+                "END",
+                "Go to the next level!",
+            ]
+
+            for i, text in enumerate(controls_text):
+                text_surface = self.small_font.render(text, True, (255, 255, 255))
+                text_rect = text_surface.get_rect(center=(black_background.get_width() * 0.5, 15 + i * 30))
+                black_background.blit(text_surface, text_rect)
+                display.blit(black_background, (0, self.game.GAME_H * 0.2))
+
+
 
         # display bars
         self.hp_bar.draw(display, self.player.get_max_hp())
         self.stamina_bar.draw(display, self.player.get_max_stamina())
         self.level_bar.draw(display, self.player.get_max_level())
-
-        # display enemy
-        for enemy in self.enemies:
-            enemy.render(display)
 
     def detect_collision(self, delta_time, direction_x, direction_y, game_map):
         if self.player.get_stamina() <= 0:
@@ -230,7 +253,7 @@ class Player():
         self.stamina = 100
         self.max_stamina = 100
 
-        self.attack = 1
+        self.attack = 0.5
 
         self.max_lvl = 100
         self.lvl = 1
@@ -306,6 +329,9 @@ class Player():
 
     def recover_stamina(self, amount):
         self.stamina = min(self.stamina + amount, self.max_stamina)
+
+    def recover_hp(self, amount):
+        self.hp = min(self.hp + amount, self.max_hp)
     def get_position(self):
         return self.position_x, self.position_y
 

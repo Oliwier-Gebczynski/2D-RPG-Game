@@ -10,7 +10,7 @@ class Enemy:
         self.dir_x = 1
         self.dir_y = 1
         self.angle = random.uniform(0, 2 * math.pi)
-        self.attack = 0.1
+        self.attack = 0.2
         self.hp = 100
 
     def update(self, delta_time, game_map, tile_size):
