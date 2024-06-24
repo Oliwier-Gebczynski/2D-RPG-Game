@@ -12,7 +12,7 @@ class IntroScreen(State):
         self.game.reset_keys()
         self.view_time += 1
 
-        if self.view_time == 1000:
+        if self.view_time == 500:
             self.transition_state()
 
     def render(self, display, input_text):

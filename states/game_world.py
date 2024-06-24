@@ -76,7 +76,6 @@ class GameWorld(State):
             self.player.recover_stamina(0.1)
             self.player.recover_hp(0.01)
 
-
         if actions["start"]:
             pass
 
@@ -95,7 +94,7 @@ class GameWorld(State):
             if self.check_enemy_collision(self.player, enemy):
                 self.player.hp -= enemy.attack
                 enemy.hp -= self.player.attack
-                self.player.stamina -= 10
+                self.player.reduce_stamina(10)
                 print(enemy.hp)
 
                 if enemy.hp <= 0:
@@ -178,8 +177,6 @@ class GameWorld(State):
                 text_rect = text_surface.get_rect(center=(black_background.get_width() * 0.5, 15 + i * 30))
                 black_background.blit(text_surface, text_rect)
                 display.blit(black_background, (0, self.game.GAME_H * 0.2))
-
-
 
         # display bars
         self.hp_bar.draw(display, self.player.get_max_hp())
