@@ -265,44 +265,35 @@ class Player():
     def render(self, display):
         display.blit(self.curr_image, (self.position_x, self.position_y))
 
-    def animate(self, delta_time, direction_x, direction_y):
+    def animate(self, delta_time, dir_x, dir_y):
         self.last_frame_update += delta_time
 
-        if not (direction_x or direction_y):
+        if not (dir_x or dir_y):
             self.curr_image = self.curr_anim_list[0]
             return
 
-        if direction_x:
-            if direction_x > 0:
-                self.curr_anim_list = self.right_sprites
-            else:
-                self.curr_anim_list = self.left_sprites
-        if direction_y:
-            if direction_y > 0:
-                self.curr_anim_list = self.front_sprites
-            else:
-                self.curr_anim_list = self.back_sprites
+        if dir_x:
+            self.curr_anim_list = self.right_sprites if dir_x > 0 else self.left_sprites
+        if dir_y:
+            self.curr_anim_list = self.front_sprites if dir_y > 0 else self.back_sprites
 
-        if self.last_frame_update > .15:
+        if self.last_frame_update > 0.15:
             self.last_frame_update = 0
             self.current_frame = (self.current_frame + 1) % len(self.curr_anim_list)
             self.curr_image = self.curr_anim_list[self.current_frame]
 
     def load_sprites(self):
-        self.sprite_dir = os.path.join(self.game.sprite_dir, "player")
+        sprite_path = os.path.join(self.game.sprite_dir, "player")
         self.front_sprites, self.back_sprites, self.right_sprites, self.left_sprites = [], [], [], []
 
         for i in range(1, 5):
-            self.front_sprites.append(
-                pygame.image.load(os.path.join(self.sprite_dir, "player_front" + str(i) + ".png")))
-            self.back_sprites.append(pygame.image.load(os.path.join(self.sprite_dir, "player_back" + str(i) + ".png")))
-            self.right_sprites.append(
-                pygame.image.load(os.path.join(self.sprite_dir, "player_right" + str(i) + ".png")))
-            self.left_sprites.append(pygame.image.load(os.path.join(self.sprite_dir, "player_left" + str(i) + ".png")))
+            self.front_sprites.append(pygame.image.load(os.path.join(sprite_path, f"player_front{i}.png")))
+            self.back_sprites.append(pygame.image.load(os.path.join(sprite_path, f"player_back{i}.png")))
+            self.right_sprites.append(pygame.image.load(os.path.join(sprite_path, f"player_right{i}.png")))
+            self.left_sprites.append(pygame.image.load(os.path.join(sprite_path, f"player_left{i}.png")))
 
         self.curr_image = self.front_sprites[0]
         self.curr_anim_list = self.front_sprites
-
     def item_action(self):
         if self.item_iterator != len(self.items):
             last_item = self.items[-1]
@@ -389,7 +380,7 @@ class Bar:
 
     def draw(self, screen, max_points):
         pygame.draw.rect(screen, (0, 0, 0), (self.x, self.y, self.width, self.height))
-
+        self.value = int(self.value)
         with self.lock:
             fill_percent = min(self.value / max_points, 1)
 
